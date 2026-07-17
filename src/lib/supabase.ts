@@ -1,9 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Mock supabase client to prevent app crashing when env variables are missing
+const createMockSupabase = () => {
+  console.warn(
+    'Supabase URL or Anon Key is missing. Using a mock Supabase client. ' +
+    'Form submissions will be logged to the console instead of saved to the database.'
+  );
+  
+  return {
+    from: (table: string) => ({
+      insert: async (payload: any) => {
+        console.log(`[Mock Supabase Insert] Table: ${table}`, payload);
+        return { data: null, error: null };
+      },
+    }),
+  };
+};
+
+export const supabase = (supabaseUrl && supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : (createMockSupabase() as any);
 
 export type Enquiry = {
   id?: string;
